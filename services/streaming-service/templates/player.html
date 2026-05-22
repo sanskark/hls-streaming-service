@@ -1,532 +1,563 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{ video_id }} — HLS Player</title>
-  <meta name="description" content="Stream {{ video_id }} in HLS format." />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ video_id }} — HLS Player</title>
+    <meta name="description" content="Stream {{ video_id }} in HLS format." />
 
-  <!-- hls.js -->
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js"></script>
+    <!-- hls.js -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js"></script>
 
-  <!-- Google Font -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap"
-    rel="stylesheet"
-  />
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-  <style>
-    /* ── Reset & tokens ─────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    <style>
+        /* ── Reset & tokens ─────────────────────────────────────────── */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-    :root {
-      --bg:        #0a0a0f;
-      --surface:   #111118;
-      --border:    #1e1e2e;
-      --accent:    #7c6af7;
-      --accent-2:  #a78bfa;
-      --text:      #e2e2f0;
-      --muted:     #6b6b8a;
-      --red:       #f87171;
-      --green:     #4ade80;
-      --radius:    14px;
-    }
+        :root {
+            --bg: #0a0a0f;
+            --surface: #111118;
+            --border: #1e1e2e;
+            --accent: #7c6af7;
+            --accent-2: #a78bfa;
+            --text: #e2e2f0;
+            --muted: #6b6b8a;
+            --red: #f87171;
+            --green: #4ade80;
+            --radius: 14px;
+        }
 
-    html, body {
-      height: 100%;
-      font-family: 'Inter', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-    }
+        html,
+        body {
+            height: 100%;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
 
-    /* ── Header ─────────────────────────────────────────────────── */
-    header {
-      width: 100%;
-      padding: 20px 40px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
-    }
+        header {
+            width: 100%;
+            padding: 20px 40px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+        }
 
-    .logo {
-      width: 32px; height: 32px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 16px;
-    }
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
 
-    .brand {
-      font-size: 1rem;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-      background: linear-gradient(90deg, var(--accent), var(--accent-2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+        .brand {
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
-    /* ── Main layout ─────────────────────────────────────────────── */
-    main {
-      width: 100%;
-      max-width: 1100px;
-      padding: 40px 24px 60px;
-      display: flex;
-      flex-direction: column;
-      gap: 28px;
-    }
+        main {
+            width: 100%;
+            max-width: 1100px;
+            padding: 40px 24px 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
 
-    /* ── Video card ───────────────────────────────────────────────── */
-    .player-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      box-shadow: 0 24px 64px rgba(0,0,0,.5);
-    }
+        .player-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, .5);
+        }
 
-    .video-wrap {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      background: #000;
-    }
+        .video-wrap {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000;
+        }
 
-    video {
-      width: 100%;
-      height: 100%;
-      display: block;
-      outline: none;
-    }
+        video {
+            width: 100%;
+            height: 100%;
+            display: block;
+            outline: none;
+        }
 
-    /* Loading overlay */
-    #overlay {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      background: rgba(0,0,0,.75);
-      backdrop-filter: blur(6px);
-      transition: opacity .4s ease;
-    }
+        #overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            background: rgba(0, 0, 0, .75);
+            backdrop-filter: blur(6px);
+            transition: opacity .4s ease;
+        }
 
-    #overlay.hidden { opacity: 0; pointer-events: none; }
+        #overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
 
-    .spinner {
-      width: 44px; height: 44px;
-      border: 3px solid rgba(255,255,255,.12);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin .8s linear infinite;
-    }
+        .spinner {
+            width: 44px;
+            height: 44px;
+            border: 3px solid rgba(255, 255, 255, .12);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+        }
 
-    @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
 
-    #overlay-msg {
-      font-size: .85rem;
-      color: var(--muted);
-      letter-spacing: 0.02em;
-    }
+        #overlay-msg {
+            font-size: .85rem;
+            color: var(--muted);
+            letter-spacing: 0.02em;
+        }
 
-    /* Error overlay */
-    #error-overlay {
-      position: absolute;
-      inset: 0;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      background: rgba(0,0,0,.85);
-    }
+        #error-overlay {
+            position: absolute;
+            inset: 0;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, .85);
+        }
 
-    #error-overlay.visible { display: flex; }
+        #error-overlay.visible {
+            display: flex;
+        }
 
-    .error-icon { font-size: 40px; }
+        .error-icon {
+            font-size: 40px;
+        }
 
-    #error-msg {
-      font-size: .9rem;
-      color: var(--red);
-      text-align: center;
-      max-width: 360px;
-      line-height: 1.5;
-    }
+        #error-msg {
+            font-size: .9rem;
+            color: var(--red);
+            text-align: center;
+            max-width: 360px;
+            line-height: 1.5;
+        }
 
-    .retry-btn {
-      margin-top: 8px;
-      padding: 8px 22px;
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: .85rem;
-      font-family: inherit;
-      cursor: pointer;
-      transition: opacity .2s;
-    }
+        .retry-btn {
+            margin-top: 8px;
+            padding: 8px 22px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: .85rem;
+            font-family: inherit;
+            cursor: pointer;
+            transition: opacity .2s;
+        }
 
-    .retry-btn:hover { opacity: .85; }
+        .retry-btn:hover {
+            opacity: .85;
+        }
 
-    /* ── Info bar ────────────────────────────────────────────────── */
-    .info-bar {
-      padding: 20px 24px;
-      border-top: 1px solid var(--border);
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 16px;
-    }
+        .info-bar {
+            padding: 20px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px;
+        }
 
-    .video-title {
-      flex: 1;
-      font-size: 1rem;
-      font-weight: 500;
-      letter-spacing: -0.01em;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+        .video-title {
+            flex: 1;
+            font-size: 1rem;
+            font-weight: 500;
+            letter-spacing: -0.01em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
-    /* Status badge */
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 12px;
-      border-radius: 99px;
-      font-size: .75rem;
-      font-weight: 500;
-      border: 1px solid transparent;
-    }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 99px;
+            font-size: .75rem;
+            font-weight: 500;
+            border: 1px solid transparent;
+        }
 
-    .badge-loading {
-      background: rgba(124,106,247,.15);
-      border-color: rgba(124,106,247,.3);
-      color: var(--accent-2);
-    }
+        .badge-loading {
+            background: rgba(124, 106, 247, .15);
+            border-color: rgba(124, 106, 247, .3);
+            color: var(--accent-2);
+        }
 
-    .badge-live {
-      background: rgba(74,222,128,.12);
-      border-color: rgba(74,222,128,.3);
-      color: var(--green);
-    }
+        .badge-live {
+            background: rgba(74, 222, 128, .12);
+            border-color: rgba(74, 222, 128, .3);
+            color: var(--green);
+        }
 
-    .badge-error {
-      background: rgba(248,113,113,.12);
-      border-color: rgba(248,113,113,.3);
-      color: var(--red);
-    }
+        .badge-error {
+            background: rgba(248, 113, 113, .12);
+            border-color: rgba(248, 113, 113, .3);
+            color: var(--red);
+        }
 
-    .dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: currentColor;
-    }
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+        }
 
-    .dot-pulse {
-      animation: pulse 1.4s ease-in-out infinite;
-    }
+        .dot-pulse {
+            animation: pulse 1.4s ease-in-out infinite;
+        }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50%       { opacity: .4; transform: scale(.8); }
-    }
+        @keyframes pulse {
 
-    /* ── Stats panel ─────────────────────────────────────────────── */
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 1px;
-      background: var(--border);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-    }
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
 
-    .stat {
-      background: var(--surface);
-      padding: 18px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
+            50% {
+                opacity: .4;
+                transform: scale(.8);
+            }
+        }
 
-    .stat-label {
-      font-size: .7rem;
-      font-weight: 500;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .06em;
-    }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
 
-    .stat-value {
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--text);
-    }
+        .stat {
+            background: var(--surface);
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
 
-    /* ── Stream URL bar ──────────────────────────────────────────── */
-    .url-bar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px 18px;
-    }
+        .stat-label {
+            font-size: .7rem;
+            font-weight: 500;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
 
-    .url-label {
-      font-size: .72rem;
-      font-weight: 600;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      white-space: nowrap;
-    }
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
 
-    .url-text {
-      flex: 1;
-      font-size: .82rem;
-      color: var(--accent-2);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-family: 'Courier New', monospace;
-    }
+        .url-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 18px;
+        }
 
-    .copy-btn {
-      padding: 6px 14px;
-      background: rgba(124,106,247,.15);
-      color: var(--accent-2);
-      border: 1px solid rgba(124,106,247,.3);
-      border-radius: 8px;
-      font-size: .75rem;
-      font-family: inherit;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background .2s;
-    }
+        .url-label {
+            font-size: .72rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            white-space: nowrap;
+        }
 
-    .copy-btn:hover { background: rgba(124,106,247,.28); }
+        .url-text {
+            flex: 1;
+            font-size: .82rem;
+            color: var(--accent-2);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-family: 'Courier New', monospace;
+        }
 
-    /* ── Responsive ──────────────────────────────────────────────── */
-    @media (max-width: 600px) {
-      header { padding: 16px 20px; }
-      main { padding: 24px 16px 48px; }
-      .info-bar { padding: 16px; }
-    }
-  </style>
+        .copy-btn {
+            padding: 6px 14px;
+            background: rgba(124, 106, 247, .15);
+            color: var(--accent-2);
+            border: 1px solid rgba(124, 106, 247, .3);
+            border-radius: 8px;
+            font-size: .75rem;
+            font-family: inherit;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background .2s;
+        }
+
+        .copy-btn:hover {
+            background: rgba(124, 106, 247, .28);
+        }
+
+        /* ── Responsive ──────────────────────────────────────────────── */
+        @media (max-width: 600px) {
+            header {
+                padding: 16px 20px;
+            }
+
+            main {
+                padding: 24px 16px 48px;
+            }
+
+            .info-bar {
+                padding: 16px;
+            }
+        }
+    </style>
 </head>
+
 <body>
 
-<header>
-  <div class="logo">▶</div>
-  <span class="brand">HLS Streaming Service</span>
-</header>
+    <header>
+        <div class="logo">▶</div>
+        <span class="brand">HLS Streaming Service</span>
+    </header>
 
-<main>
+    <main>
 
-  <!-- Player card -->
-  <div class="player-card">
-    <div class="video-wrap">
-      <video id="video" controls playsinline></video>
+        <div class="player-card">
+            <div class="video-wrap">
+                <video id="video" controls playsinline></video>
 
-      <!-- Loading overlay -->
-      <div id="overlay">
-        <div class="spinner"></div>
-        <span id="overlay-msg">Loading stream…</span>
-      </div>
+                <div id="overlay">
+                    <div class="spinner"></div>
+                    <span id="overlay-msg">Loading stream…</span>
+                </div>
 
-      <!-- Error overlay -->
-      <div id="error-overlay">
-        <span class="error-icon">⚠️</span>
-        <p id="error-msg">Failed to load the stream.</p>
-        <button class="retry-btn" onclick="initPlayer()">Retry</button>
-      </div>
-    </div>
+                <div id="error-overlay">
+                    <span class="error-icon">⚠️</span>
+                    <p id="error-msg">Failed to load the stream.</p>
+                    <button class="retry-btn" onclick="initPlayer()">Retry</button>
+                </div>
+            </div>
 
-    <div class="info-bar">
-      <span class="video-title" id="video-title">{{ video_id }}</span>
-      <span class="badge badge-loading" id="status-badge">
-        <span class="dot dot-pulse"></span> Loading
-      </span>
-    </div>
-  </div>
+            <div class="info-bar">
+                <span class="video-title" id="video-title">{{ video_id }}</span>
+                <span class="badge badge-loading" id="status-badge">
+                    <span class="dot dot-pulse"></span> Loading
+                </span>
+            </div>
+        </div>
 
-  <!-- Live stats -->
-  <div class="stats">
-    <div class="stat">
-      <span class="stat-label">Resolution</span>
-      <span class="stat-value" id="stat-res">—</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">Bitrate</span>
-      <span class="stat-value" id="stat-bps">—</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">Buffered</span>
-      <span class="stat-value" id="stat-buf">—</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">Dropped Frames</span>
-      <span class="stat-value" id="stat-drop">—</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">Level</span>
-      <span class="stat-value" id="stat-lvl">—</span>
-    </div>
-  </div>
+        <div class="stats">
+            <div class="stat">
+                <span class="stat-label">Resolution</span>
+                <span class="stat-value" id="stat-res">—</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Bitrate</span>
+                <span class="stat-value" id="stat-bps">—</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Buffered</span>
+                <span class="stat-value" id="stat-buf">—</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Dropped Frames</span>
+                <span class="stat-value" id="stat-drop">—</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Level</span>
+                <span class="stat-value" id="stat-lvl">—</span>
+            </div>
+        </div>
 
-  <!-- Stream URL -->
-  <div class="url-bar">
-    <span class="url-label">Stream URL</span>
-    <span class="url-text" id="stream-url-display">{{ stream_url }}</span>
-    <button class="copy-btn" id="copy-btn">Copy</button>
-  </div>
+        <div class="url-bar">
+            <span class="url-label">Stream URL</span>
+            <span class="url-text" id="stream-url-display">{{ stream_url }}</span>
+            <button class="copy-btn" id="copy-btn">Copy</button>
+        </div>
 
-</main>
+    </main>
 
-<script>
-  const VIDEO_ID   = "{{ video_id }}";
-  const STREAM_URL = "{{ stream_url }}";
+    <script>
+        const VIDEO_ID = "{{ video_id }}";
+        const STREAM_URL = "{{ stream_url }}";
 
-  const video      = document.getElementById("video");
-  const overlay    = document.getElementById("overlay");
-  const overlayMsg = document.getElementById("overlay-msg");
-  const errOverlay = document.getElementById("error-overlay");
-  const errMsg     = document.getElementById("error-msg");
-  const badge      = document.getElementById("status-badge");
-  const statRes    = document.getElementById("stat-res");
-  const statBps    = document.getElementById("stat-bps");
-  const statBuf    = document.getElementById("stat-buf");
-  const statDrop   = document.getElementById("stat-drop");
-  const statLvl    = document.getElementById("stat-lvl");
+        const video = document.getElementById("video");
+        const overlay = document.getElementById("overlay");
+        const overlayMsg = document.getElementById("overlay-msg");
+        const errOverlay = document.getElementById("error-overlay");
+        const errMsg = document.getElementById("error-msg");
+        const badge = document.getElementById("status-badge");
+        const statRes = document.getElementById("stat-res");
+        const statBps = document.getElementById("stat-bps");
+        const statBuf = document.getElementById("stat-buf");
+        const statDrop = document.getElementById("stat-drop");
+        const statLvl = document.getElementById("stat-lvl");
 
-  let hls = null;
+        let hls = null;
 
-  function setStatus(state) {
-    badge.className = "badge badge-" + state;
-    const labels = { loading: "Loading", live: "Playing", error: "Error" };
-    const dotClass = state === "live" ? "dot dot-pulse" : "dot";
-    badge.innerHTML = `<span class="${dotClass}"></span> ${labels[state] || state}`;
-  }
-
-  function fmtBps(bps) {
-    if (!bps) return "—";
-    if (bps >= 1_000_000) return (bps / 1_000_000).toFixed(1) + " Mbps";
-    return Math.round(bps / 1000) + " kbps";
-  }
-
-  function updateStats() {
-    if (!hls) return;
-    const level = hls.levels[hls.currentLevel];
-    if (level) {
-      statRes.textContent = `${level.width}×${level.height}`;
-      statBps.textContent = fmtBps(level.bitrate);
-      statLvl.textContent = `${hls.currentLevel + 1} / ${hls.levels.length}`;
-    }
-    // Buffered ahead
-    if (video.buffered.length) {
-      const buf = video.buffered.end(video.buffered.length - 1) - video.currentTime;
-      statBuf.textContent = buf.toFixed(1) + "s";
-    }
-    // Dropped frames (Chrome/Edge only)
-    if (video.getVideoPlaybackQuality) {
-      const q = video.getVideoPlaybackQuality();
-      statDrop.textContent = q.droppedVideoFrames ?? "—";
-    }
-  }
-
-  setInterval(updateStats, 1000);
-
-  function showError(msg) {
-    overlay.classList.add("hidden");
-    errMsg.textContent = msg;
-    errOverlay.classList.add("visible");
-    setStatus("error");
-  }
-
-  function initPlayer() {
-    errOverlay.classList.remove("visible");
-    overlay.classList.remove("hidden");
-    overlayMsg.textContent = "Loading stream…";
-    setStatus("loading");
-
-    if (hls) { hls.destroy(); hls = null; }
-
-    if (Hls.isSupported()) {
-      hls = new Hls({
-        maxBufferLength: 30,
-        maxMaxBufferLength: 60,
-        enableWorker: true,
-      });
-
-      hls.loadSource(STREAM_URL);
-      hls.attachMedia(video);
-
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        overlayMsg.textContent = "Starting playback…";
-        video.play().catch(() => {});
-      });
-
-      hls.on(Hls.Events.ERROR, (_e, data) => {
-        if (data.fatal) {
-          switch (data.type) {
-            case Hls.ErrorTypes.NETWORK_ERROR:
-              showError("Network error — could not reach the stream. Is the video transcoded?");
-              break;
-            case Hls.ErrorTypes.MEDIA_ERROR:
-              hls.recoverMediaError();
-              break;
-            default:
-              showError("A fatal playback error occurred.");
-          }
+        function setStatus(state) {
+            badge.className = "badge badge-" + state;
+            const labels = { loading: "Loading", live: "Playing", error: "Error" };
+            const dotClass = state === "live" ? "dot dot-pulse" : "dot";
+            badge.innerHTML = `<span class="${dotClass}"></span> ${labels[state] || state}`;
         }
-      });
 
-    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      // Native HLS (Safari / iOS)
-      video.src = STREAM_URL;
-    } else {
-      showError("Your browser does not support HLS playback.");
-    }
+        function fmtBps(bps) {
+            if (!bps) return "—";
+            if (bps >= 1_000_000) return (bps / 1_000_000).toFixed(1) + " Mbps";
+            return Math.round(bps / 1000) + " kbps";
+        }
 
-    video.addEventListener("playing", () => {
-      overlay.classList.add("hidden");
-      setStatus("live");
-    }, { once: true });
+        function updateStats() {
+            if (!hls) return;
+            const level = hls.levels[hls.currentLevel];
+            if (level) {
+                statRes.textContent = `${level.width}×${level.height}`;
+                statBps.textContent = fmtBps(level.bitrate);
+                statLvl.textContent = `${hls.currentLevel + 1} / ${hls.levels.length}`;
+            }
+            // Buffered ahead
+            if (video.buffered.length) {
+                const buf = video.buffered.end(video.buffered.length - 1) - video.currentTime;
+                statBuf.textContent = buf.toFixed(1) + "s";
+            }
+            // Dropped frames (Chrome/Edge only)
+            if (video.getVideoPlaybackQuality) {
+                const q = video.getVideoPlaybackQuality();
+                statDrop.textContent = q.droppedVideoFrames ?? "—";
+            }
+        }
 
-    video.addEventListener("waiting", () => {
-      overlay.classList.remove("hidden");
-      overlayMsg.textContent = "Buffering…";
-    });
+        setInterval(updateStats, 1000);
 
-    video.addEventListener("playing", () => {
-      overlay.classList.add("hidden");
-    });
-  }
+        function showError(msg) {
+            overlay.classList.add("hidden");
+            errMsg.textContent = msg;
+            errOverlay.classList.add("visible");
+            setStatus("error");
+        }
 
-  initPlayer();
+        function initPlayer() {
+            errOverlay.classList.remove("visible");
+            overlay.classList.remove("hidden");
+            overlayMsg.textContent = "Loading stream…";
+            setStatus("loading");
 
-  // Copy stream URL
-  document.getElementById("copy-btn").addEventListener("click", () => {
-    const url = window.location.origin + STREAM_URL;
-    navigator.clipboard.writeText(url).then(() => {
-      const btn = document.getElementById("copy-btn");
-      btn.textContent = "Copied!";
-      setTimeout(() => { btn.textContent = "Copy"; }, 2000);
-    });
-  });
-</script>
+            if (hls) { hls.destroy(); hls = null; }
+
+            if (Hls.isSupported()) {
+                hls = new Hls({
+                    maxBufferLength: 30,
+                    maxMaxBufferLength: 60,
+                    enableWorker: true,
+                });
+
+                hls.loadSource(STREAM_URL);
+                hls.attachMedia(video);
+
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    overlayMsg.textContent = "Starting playback…";
+                    video.play().catch(() => { });
+                });
+
+                hls.on(Hls.Events.ERROR, (_e, data) => {
+                    if (data.fatal) {
+                        switch (data.type) {
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+                                showError("Network error — could not reach the stream. Is the video transcoded?");
+                                break;
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+                                hls.recoverMediaError();
+                                break;
+                            default:
+                                showError("A fatal playback error occurred.");
+                        }
+                    }
+                });
+
+            } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+                // Native HLS (Safari / iOS)
+                video.src = STREAM_URL;
+            } else {
+                showError("Your browser does not support HLS playback.");
+            }
+
+            video.addEventListener("playing", () => {
+                overlay.classList.add("hidden");
+                setStatus("live");
+            }, { once: true });
+
+            video.addEventListener("waiting", () => {
+                overlay.classList.remove("hidden");
+                overlayMsg.textContent = "Buffering…";
+            });
+
+            video.addEventListener("playing", () => {
+                overlay.classList.add("hidden");
+            });
+        }
+
+        initPlayer();
+
+        // Copy stream URL
+        document.getElementById("copy-btn").addEventListener("click", () => {
+            const url = window.location.origin + STREAM_URL;
+            navigator.clipboard.writeText(url).then(() => {
+                const btn = document.getElementById("copy-btn");
+                btn.textContent = "Copied!";
+                setTimeout(() => { btn.textContent = "Copy"; }, 2000);
+            });
+        });
+    </script>
 </body>
+
 </html>
