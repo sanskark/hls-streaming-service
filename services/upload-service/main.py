@@ -40,7 +40,7 @@ async def upload_video(file: UploadFile = File(...)):
     print(f"Uploaded to S3: {s3_key}")
 
     # Send Kafka event
-    producer.send("video.uploaded", {
+    producer.send(topic="video.uploaded", value={
         "filename": file.filename,
         "s3_key": s3_key,
         "bucket": RAW_BUCKET
