@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.env
+.env.*
+.git
+venv/
+.venv/
+.pytest_cache/
+*.ts
+*.m3u8

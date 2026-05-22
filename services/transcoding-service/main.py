@@ -2,11 +2,13 @@ import json
 import os
 import subprocess
 import tempfile
+import uuid
 
 import boto3
 from kafka import KafkaConsumer
 
 
+KAFKA_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
 RAW_BUCKET  = os.getenv("S3_RAW_BUCKET")
 HLS_BUCKET  = os.getenv("S3_HLS_BUCKET")
 
@@ -20,7 +22,7 @@ s3 = boto3.client(
 
 consumer = KafkaConsumer(
     'video.uploaded',
-    bootstrap_servers=["localhost:9092"],
+    bootstrap_servers=[KAFKA_SERVERS],
     value_deserializer=lambda v: json.loads(v.decode("utf-8")),
     enable_auto_commit=False,
     auto_offset_reset='earliest',
@@ -63,12 +65,13 @@ def transcode_to_hls(input_path, output_dir):
         stderr=subprocess.STDOUT,
         text=True
     )
+
+    for line in process.stdout:
+        print(line.strip())
+
     process.wait()
     if process.returncode != 0:
-        raise RuntimeError("FFmpeg failed")
-    if process.stdout:
-        for line in process.stdout:
-            print(line.strip())
+        raise RuntimeError(f"FFmpeg failed with exit code {process.returncode}")
 
     print("FFmpeg done")
     return output_dir
@@ -91,7 +94,8 @@ def upload_hls_to_s3(local_dir, video_id):
 
 
 def process(msg):
-    video_id = msg["filename"].replace(".mp4", "")
+    stem = os.path.splitext(msg["filename"])[0]
+    video_id = f"{stem}_{uuid.uuid4().hex[:8]}"
     s3_key = msg["s3_key"]
 
     with tempfile.TemporaryDirectory() as tmpdir:
