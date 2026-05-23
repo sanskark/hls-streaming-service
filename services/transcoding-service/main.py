@@ -29,6 +29,9 @@ consumer = KafkaConsumer(
     enable_auto_commit=False,
     auto_offset_reset="earliest",
     group_id="transcoding-group",
+    max_poll_interval_ms=1_800_000,
+    session_timeout_ms=60_000,
+    heartbeat_interval_ms=20_000,
 )
 
 
