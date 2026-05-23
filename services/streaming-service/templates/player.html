@@ -461,8 +461,16 @@
             if (!hls) return;
             const level = hls.levels[hls.currentLevel];
             if (level) {
-                statRes.textContent = `${level.width}×${level.height}`;
-                statBps.textContent = fmtBps(level.bitrate);
+                // Resolution: prefer HLS manifest metadata, fall back to
+                // decoded video dimensions (available once playback starts)
+                const w = level.width  || video.videoWidth;
+                const h = level.height || video.videoHeight;
+                statRes.textContent = (w && h) ? `${w}×${h}` : "—";
+
+                // Bitrate: prefer manifest value, fall back to hls.js estimate
+                const bps = level.bitrate || hls.bandwidthEstimate;
+                statBps.textContent = fmtBps(bps);
+
                 statLvl.textContent = `${hls.currentLevel + 1} / ${hls.levels.length}`;
             }
             // Buffered ahead
@@ -506,7 +514,13 @@
 
                 hls.on(Hls.Events.MANIFEST_PARSED, () => {
                     overlayMsg.textContent = "Starting playback…";
-                    video.play().catch(() => { });
+                    video.play().catch(() => {
+                        // Autoplay blocked by browser — hide overlay so
+                        // the user can click the native play button
+                        overlay.classList.add("hidden");
+                        setStatus("loading");
+                        overlayMsg.textContent = "Click ▶ to play";
+                    });
                 });
 
                 hls.on(Hls.Events.ERROR, (_e, data) => {
@@ -531,18 +545,15 @@
                 showError("Your browser does not support HLS playback.");
             }
 
+            // Single playing listener — hides overlay and sets badge
             video.addEventListener("playing", () => {
                 overlay.classList.add("hidden");
                 setStatus("live");
-            }, { once: true });
+            });
 
             video.addEventListener("waiting", () => {
                 overlay.classList.remove("hidden");
                 overlayMsg.textContent = "Buffering…";
-            });
-
-            video.addEventListener("playing", () => {
-                overlay.classList.add("hidden");
             });
         }
 

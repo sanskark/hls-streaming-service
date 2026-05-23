@@ -107,9 +107,9 @@ def player(request: Request, video_id: str):
     """Serve the HLS web player for a given video ID."""
     stream_url = f"/stream/{video_id}/master.m3u8"
     return templates.TemplateResponse(
-        "player.html",
-        {
-            "request": request,
+        request=request,
+        name="player.html",
+        context={
             "video_id": video_id,
             "stream_url": stream_url,
         },

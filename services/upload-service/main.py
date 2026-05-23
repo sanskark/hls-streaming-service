@@ -16,9 +16,10 @@ logging.basicConfig(level=logging.INFO)
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
 
 KAFKA_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
-ALLOWED_TYPES = {"video/mp4", "video/quicktime", "video/x-matroska", "video/webm"}
+ALLOWED_EXTENSIONS = {".mp4", ".mov", ".mkv", ".webm", ".avi", ".m4v"}
 MAX_SIZE_BYTES = 2 * 1024 * 1024 * 1024  # 2 GB
 
+producer, s3 = None, None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -49,11 +50,14 @@ app = FastAPI(title="Upload Service", lifespan=lifespan)
 def health():
     return {"status": "OK!"}
 
-
 @app.post("/upload")
 async def upload_video(file: UploadFile = File(...)):
-    if file.content_type not in ALLOWED_TYPES:
-        raise HTTPException(status_code=400, detail="Invalid file type")
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=415,
+            detail=f"Unsupported file type '{ext}'. Allowed: {', '.join(ALLOWED_EXTENSIONS)}"
+        )
     if file.size > MAX_SIZE_BYTES:
         raise HTTPException(status_code=400, detail="File too large")
     s3_key = f"raw/{file.filename}"
