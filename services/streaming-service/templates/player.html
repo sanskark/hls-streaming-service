@@ -427,8 +427,8 @@
     </main>
 
     <script>
-        const VIDEO_ID = "{{ video_id }}";
-        const STREAM_URL = "{{ stream_url }}";
+        const VIDEO_ID   = {{ video_id | tojson }};
+        const STREAM_URL = {{ stream_url | tojson }};
 
         const video = document.getElementById("video");
         const overlay = document.getElementById("overlay");
